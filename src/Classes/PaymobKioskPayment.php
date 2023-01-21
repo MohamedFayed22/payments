@@ -8,7 +8,7 @@ use Nafezly\Payments\Exceptions\MissingPaymentInfoException;
 use Nafezly\Payments\Interfaces\PaymentInterface;
 use Nafezly\Payments\Classes\BaseController;
 
-class PaymobWalletPayment extends BaseController implements PaymentInterface
+class PaymobKioskPayment extends BaseController implements PaymentInterface
 {
     private $paymob_api_key;
     private $paymob_wallet_integration_id;
@@ -17,7 +17,7 @@ class PaymobWalletPayment extends BaseController implements PaymentInterface
     {
         $this->paymob_api_key = config('nafezly-payments.PAYMOB_API_KEY');
         $this->currency = config("nafezly-payments.PAYMOB_CURRENCY");
-        $this->paymob_wallet_integration_id = config("nafezly-payments.PAYMOB_WALLET_INTEGRATION_ID");
+        $this->paymob_wallet_integration_id = config("nafezly-payments.PAYMOB_KIOSK_INTEGRATION_ID");
     }
 
     /**
@@ -31,7 +31,7 @@ class PaymobWalletPayment extends BaseController implements PaymentInterface
      * @return void
      * @throws MissingPaymentInfoException
      */
-    public function pay($amount = null, $user_id = null, $user_first_name = null, $user_last_name = null, $user_email = null, $user_phone = null, $source = null, $order_name = null)
+    public function pay($amount = null, $user_id = null, $user_first_name = null, $user_last_name = null, $user_email = null, $user_phone = null, $source = null)
     {
         $this->setPassedVariablesToGlobal($amount,$user_id,$user_first_name,$user_last_name,$user_email,$user_phone,$source);
         $required_fields = ['amount', 'user_first_name', 'user_last_name', 'user_email', 'user_phone'];
@@ -42,30 +42,12 @@ class PaymobWalletPayment extends BaseController implements PaymentInterface
                 "api_key" => $this->paymob_api_key
             ])->json();
 
-        $course_data = [];
-
-        if($order_name !== null){
-            foreach($order_name as $key=>$item){
-                if($item->webinar_id == null){
-                    $course_data[$key]['name'] = $item->bundle_id;
-                    $course_data[$key]['description'] = $item->bundle->title;
-                    $course_data[$key]['amount_cents'] = $item->total_amount;
-                    $course_data[$key]['quantity']  = 1;
-                }else{
-                    $course_data[$key]['name'] = $item->webinar_id;
-                    $course_data[$key]['description'] = $item->webinar->title;
-                    $course_data[$key]['amount_cents'] = $item->total_amount;
-                    $course_data[$key]['quantity']  = 1;
-                }
-            }
-        }
-
         $get_order = Http::withHeaders(['content-type' => 'application/json'])
             ->post('https://accept.paymobsolutions.com/api/ecommerce/orders', [
                 "auth_token" => $request_new_token['token'],
                 "delivery_needed" => "false",
                 "amount_cents" => $this->amount * 100,
-                "items" => $course_data
+                "items" => []
             ])->json();
         $get_url_token = Http::withHeaders(['content-type' => 'application/json'])
             ->post('https://accept.paymobsolutions.com/api/acceptance/payment_keys', [
@@ -92,21 +74,19 @@ class PaymobWalletPayment extends BaseController implements PaymentInterface
                 "integration_id" => $this->paymob_wallet_integration_id,
                 'lock_order_when_paid'=>true
             ])->json();
-            
 
         $get_pay_link = Http::withHeaders(['content-type' => 'application/json'])
             ->post('https://accept.paymob.com/api/acceptance/payments/pay', [
                 'source'=>[
-                    "identifier"=>$this->user_phone,
-                    'subtype'=>"WALLET"
+                    "identifier"=>"AGGREGATOR",
+                    'subtype'=>"AGGREGATOR"
                 ],
                 "payment_token"=>$get_url_token['token']
-        ])->json();
-        
+        ])->json(); 
         return [
             'payment_id'=>$get_order['id'],
             'html' => "",
-            'redirect_url'=>$get_pay_link['iframe_redirection_url']
+            'redirect_url'=>$get_pay_link['redirect_url'] ?? null
         ];
         
     }

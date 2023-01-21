@@ -4,6 +4,7 @@ namespace Nafezly\Payments;
 
 use Illuminate\Support\ServiceProvider;
 use Nafezly\Payments\Classes\FawryPayment;
+use Nafezly\Payments\Classes\FawryWalletPayment;
 use Nafezly\Payments\Classes\HyperPayPayment;
 use Nafezly\Payments\Classes\KashierPayment;
 use Nafezly\Payments\Classes\PaymobPayment;
@@ -13,6 +14,7 @@ use Nafezly\Payments\Classes\ThawaniPayment;
 use Nafezly\Payments\Classes\TapPayment;
 use Nafezly\Payments\Classes\OpayPayment;
 use Nafezly\Payments\Classes\PaymobWalletPayment;
+use Nafezly\Payments\Classes\PaymobKioskPayment;
 
 class NafezlyPaymentsServiceProvider extends ServiceProvider
 {
@@ -55,6 +57,9 @@ class NafezlyPaymentsServiceProvider extends ServiceProvider
         $this->app->bind(FawryPayment::class, function () {
             return new FawryPayment();
         });
+        $this->app->bind(FawryWalletPayment::class, function () {
+            return new FawryWalletPayment();
+        });
         $this->app->bind(ThawaniPayment::class, function () {
             return new ThawaniPayment();
         });
@@ -72,6 +77,9 @@ class NafezlyPaymentsServiceProvider extends ServiceProvider
         });
         $this->app->bind(OpayPayment::class, function () {
             return new OpayPayment();
+        });
+        $this->app->bind(PaymobKioskPayment::class, function () {
+            return new PaymobKioskPayment();
         });
         $this->app->bind(PaymobWalletPayment::class, function () {
             return new PaymobWalletPayment();

@@ -9,7 +9,7 @@ use Nafezly\Payments\Interfaces\PaymentInterface;
 use Nafezly\Payments\Classes\BaseController;
 use GuzzleHttp\Client;
 
-class FawryPayment extends BaseController implements PaymentInterface 
+class FawryWalletPayment extends BaseController implements PaymentInterface 
 {
     public $fawry_url;
     public $fawry_secret;
@@ -42,14 +42,13 @@ class FawryPayment extends BaseController implements PaymentInterface
      * @return string[]
      * @throws MissingPaymentInfoException
      */
-    public function pay($amount = null, $user_id = null, $user_first_name = null, $user_last_name = null, $user_email = null, $user_phone = null, $source = null, $order_name = null): array
+    public function pay($amount = null, $user_id = null, $user_first_name = null, $user_last_name = null, $user_email = null, $user_phone = null, $source = null): array
     {
         $this->setPassedVariablesToGlobal($amount,$user_id,$user_first_name,$user_last_name,$user_email,$user_phone,$source);
         $required_fields = ['amount', 'user_id', 'user_first_name', 'user_last_name', 'user_email', 'user_phone'];
         $this->checkRequiredFields($required_fields, 'FAWRY', func_get_args());
 
         $unique_id = uniqid();
-
 
         $data = [
             'fawry_url' => $this->fawry_url,
@@ -58,7 +57,6 @@ class FawryPayment extends BaseController implements PaymentInterface
             'user_id' => $this->user_id,
             'user_name' => "{$this->user_first_name} {$this->user_last_name}",
             'user_email' => $this->user_email,
-            'order_name' => $order_name,
             'user_phone' => $this->user_phone,
             'unique_id' => $this->unique_id,
             'item_id' => 1,
@@ -74,7 +72,7 @@ class FawryPayment extends BaseController implements PaymentInterface
         return [
             'payment_id' => $this->unique_id, 
             'html' =>  null,
-            'redirect_url'=> $this->sendOrder($url, $this->getChargeData($order_name), $this->getHeaders())
+            'redirect_url'=> $this->sendOrder($url, $this->getChargeData(), $this->getHeaders())
         ];
 
     }
@@ -121,24 +119,9 @@ class FawryPayment extends BaseController implements PaymentInterface
         return hash('sha256', $signature);
     }
     
-    private function getChargeData($order_name = null)
+    private function getChargeData()
     {
-        $course_data = [];
-        foreach($order_name as $key=>$item){
-            if($item->webinar_id == null){
-                $course_data[$key]['itemId'] = $item->bundle_id;
-                $course_data[$key]['description'] = $item->bundle->title;
-                $course_data[$key]['price'] = $item->total_amount;
-                $course_data[$key]['quantity']  = 1;
-            }else{
-                $course_data[$key]['itemId'] = $item->webinar_id;
-                $course_data[$key]['description'] = $item->webinar->title;
-                $course_data[$key]['price'] = $item->total_amount;
-                $course_data[$key]['quantity']  = 1;
-            }
-        }
-      //  dd($course_data, $this->amount);
-
+        
         return [
             'merchantCode' => $this->fawry_merchant,
             'merchantRefNum' => $this->unique_id,
@@ -146,7 +129,17 @@ class FawryPayment extends BaseController implements PaymentInterface
             'customerEmail' => $this->user_email ?? '',
             'customerName' => "{$this->user_first_name} {$this->user_last_name}",
             'customerProfileId' => $this->user_id,
-            'chargeItems'=> $course_data,
+            'chargeItems'=>  [
+               
+                [
+                 'itemId' => $this->unique_id,
+                'description' => $this->user_phone,
+                'price' => $this->amount,
+                'quantity' => 1,
+                ]
+
+            ],
+            'paymentMethod'=>'MWALLET',
             'language' => 'en-gb',
             'currencyCode' => 'EGP',
             'returnUrl' => route($this->verify_route_name, ["gateway" => "fawry"]).'?'.http_build_query(['merchantRefNum' => $this->unique_id.'']),
