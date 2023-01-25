@@ -19,6 +19,8 @@ class FawryPayment extends BaseController implements PaymentInterface
     public $fawry_pay_mode;
     public $unique_id;
 
+    public $currency;
+
     public function __construct()
     {
         $this->fawry_url = config('nafezly-payments.FAWRY_URL');
@@ -42,13 +44,14 @@ class FawryPayment extends BaseController implements PaymentInterface
      * @return string[]
      * @throws MissingPaymentInfoException
      */
-    public function pay($amount = null, $user_id = null, $user_first_name = null, $user_last_name = null, $user_email = null, $user_phone = null, $source = null, $order_name = null): array
+    public function pay($amount = null, $user_id = null, $user_first_name = null, $user_last_name = null, $user_email = null, $user_phone = null, $source = null, $order_name = null, $currency = null): array
     {
         $this->setPassedVariablesToGlobal($amount,$user_id,$user_first_name,$user_last_name,$user_email,$user_phone,$source);
         $required_fields = ['amount', 'user_id', 'user_first_name', 'user_last_name', 'user_email', 'user_phone'];
         $this->checkRequiredFields($required_fields, 'FAWRY', func_get_args());
 
         $unique_id = uniqid();
+        $this->currency = $currency;
 
 
         $data = [
@@ -148,7 +151,7 @@ class FawryPayment extends BaseController implements PaymentInterface
             'customerProfileId' => $this->user_id,
             'chargeItems'=> $course_data,
             'language' => 'en-gb',
-            'currencyCode' => 'EGP',
+            'currencyCode' => $this->currency,
             'returnUrl' => route($this->verify_route_name, ["gateway" => "fawry"]).'?'.http_build_query(['merchantRefNum' => $this->unique_id.'']),
             'authCaptureModePayment' => false,
             'signature' => $this->getSignature()

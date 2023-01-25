@@ -13,10 +13,12 @@ class PaymobWalletPayment extends BaseController implements PaymentInterface
     private $paymob_api_key;
     private $paymob_wallet_integration_id;
 
+    public $currency;
+
     public function __construct()
     {
         $this->paymob_api_key = config('nafezly-payments.PAYMOB_API_KEY');
-        $this->currency = config("nafezly-payments.PAYMOB_CURRENCY");
+       // $this->currency = config("nafezly-payments.PAYMOB_CURRENCY");
         $this->paymob_wallet_integration_id = config("nafezly-payments.PAYMOB_WALLET_INTEGRATION_ID");
     }
 
@@ -31,11 +33,13 @@ class PaymobWalletPayment extends BaseController implements PaymentInterface
      * @return void
      * @throws MissingPaymentInfoException
      */
-    public function pay($amount = null, $user_id = null, $user_first_name = null, $user_last_name = null, $user_email = null, $user_phone = null, $source = null, $order_name = null)
+    public function pay($amount = null, $user_id = null, $user_first_name = null, $user_last_name = null, $user_email = null, $user_phone = null, $source = null, $order_name = null ,$currency = null)
     {
         $this->setPassedVariablesToGlobal($amount,$user_id,$user_first_name,$user_last_name,$user_email,$user_phone,$source);
         $required_fields = ['amount', 'user_first_name', 'user_last_name', 'user_email', 'user_phone'];
         $this->checkRequiredFields($required_fields, 'PayMob', func_get_args());
+
+        $this->currency = $currency;
 
         $request_new_token = Http::withHeaders(['content-type' => 'application/json'])
             ->post('https://accept.paymobsolutions.com/api/auth/tokens', [
