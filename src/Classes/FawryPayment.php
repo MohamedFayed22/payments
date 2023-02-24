@@ -131,12 +131,12 @@ class FawryPayment extends BaseController implements PaymentInterface
             if($item->webinar_id == null){
                 $course_data[$key]['itemId'] = $item->bundle_id;
                 $course_data[$key]['description'] = $item->bundle->title;
-                $course_data[$key]['price'] = $item->total_amount;
+                $course_data[$key]['price'] = ($item->total_amount > 0) ? $item->total_amount : $item->total_discount;
                 $course_data[$key]['quantity']  = 1;
             }else{
                 $course_data[$key]['itemId'] = $item->webinar_id;
                 $course_data[$key]['description'] = $item->webinar->title;
-                $course_data[$key]['price'] = $item->total_amount;
+                $course_data[$key]['price'] = ($item->total_amount > 0) ? $item->total_amount : $item->total_discount;
                 $course_data[$key]['quantity']  = 1;
             }
         }
@@ -150,6 +150,7 @@ class FawryPayment extends BaseController implements PaymentInterface
             'customerName' => "{$this->user_first_name} {$this->user_last_name}",
             'customerProfileId' => $this->user_id,
             'chargeItems'=> $course_data,
+            'amount'=> $this->amount,
             'language' => 'en-gb',
             'currencyCode' => $this->currency,
             'returnUrl' => route($this->verify_route_name, ["gateway" => "fawry"]).'?'.http_build_query(['merchantRefNum' => $this->unique_id.'']),
