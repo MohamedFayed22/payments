@@ -15,7 +15,7 @@
     chargeRequest.order.expiry = '';
     chargeRequest.paymentMethod='{{$model->fawry_pay_mode}}';
     chargeRequest.order.orderItems = [];
-    chargeRequest.returnUrl= "{{ route($model->verify_route_name, ["payment" => "fawry"]) }}";
+    chargeRequest.returnUrl= "{{ route($model->verify_route_name, ["gateway" => "fawry"]) }}";
     const item = {};
     item.productSKU = 1;
     item.description = 'Credit';

@@ -63,6 +63,7 @@ return [
 
     #PAYMOB_WALLET (vodaphone-cash,orange-money,etisalat-cash,we-cash,meza-wallet) - test phone 01010101010 ,PIN & OTP IS 123456
     'PAYMOB_WALLET_INTEGRATION_ID'=>env('PAYMOB_WALLET_INTEGRATION_ID'),
+
     'PAYMOB_KIOSK_INTEGRATION_ID'=>env('PAYMOB_KIOSK_INTEGRATION_ID'),
 
     #Paytabs
